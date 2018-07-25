@@ -25,17 +25,10 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.security.Principal;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
-import com.nimbusds.oauth2.sdk.http.HTTPRequest;
-import com.nimbusds.oauth2.sdk.http.HTTPResponse;
-import org.apache.ecs.html.S;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xwiki.contrib.oidc.auth.internal.CustomPrincipal;
 import org.xwiki.contrib.oidc.auth.internal.OIDCClientConfiguration;
 import org.xwiki.contrib.oidc.auth.internal.OIDCUserManager;
 import org.xwiki.contrib.oidc.auth.internal.endpoint.CallbackOIDCEndpoint;
@@ -46,9 +39,7 @@ import org.xwiki.model.reference.DocumentReferenceResolver;
 import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.properties.ConverterManager;
 
-import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.id.State;
-import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.xpn.xwiki.XWiki;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
@@ -58,7 +49,6 @@ import com.xpn.xwiki.web.Utils;
 import com.xpn.xwiki.web.XWikiRequest;
 import org.xwiki.query.QueryException;
 
-import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
 /**
@@ -133,7 +123,7 @@ public class OIDCAuthServiceImpl extends XWikiAuthServiceImpl
             return null;
         }
         OAuthUserInfo userInfo = new OAuthUserInfo();
-        userInfo.setName(userName);
+        userInfo.setLoginName(userName);
         //Create or Update user
         users.updateUser(userInfo);
         return new XWikiUser("XWiki." + userName);
@@ -217,19 +207,25 @@ public class OIDCAuthServiceImpl extends XWikiAuthServiceImpl
         maybeStoreRequestParameterURLInSession(request, OIDCClientConfiguration.PROP_ENDPOINT_USERINFO);
 
         // Create the request URL
-        ResponseType responseType = ResponseType.getDefault();
-        AuthenticationRequest.Builder requestBuilder = new AuthenticationRequest.Builder(responseType,
-            this.configuration.getCustomScope(), this.configuration.getClientID(), callback);
-        requestBuilder.endpointURI(this.configuration.getAuthorizationOIDCEndpoint());
-
-        // Claims
-//        requestBuilder.claims(this.configuration.getClaimsRequest());
-
-        // State
-        requestBuilder.state(state);
+        //TODO 改用简单认证模式 token， 使用ok http
+//        ResponseType responseType = ResponseType.getDefault();
+//        AuthenticationRequest.Builder requestBuilder = new AuthenticationRequest.Builder(responseType,
+//            this.configuration.getCustomScope(), this.configuration.getClientID(), callback);
+//        requestBuilder.endpointURI(this.configuration.getAuthorizationOIDCEndpoint());
+//
+//        // Claims
+////        requestBuilder.claims(this.configuration.getClaimsRequest());
+//
+//        // State
+//        requestBuilder.state(state);
+        String authUrl = this.configuration.getAuthorizationOIDCEndpoint().toString() +
+                "?response_type=token" +
+                "&client_id=" + this.configuration.getClientID().getValue() +
+                "&state=" + state.getValue();
 
         // Redirect the user to the provider
-        context.getResponse().sendRedirect(requestBuilder.build().toURI().toString());
+        context.getResponse().sendRedirect(authUrl);
+//        context.getResponse().sendRedirect(requestBuilder.build().toURI().toString());
     }
 
     private void maybeStoreRequestParameterInSession(XWikiRequest request, String key)

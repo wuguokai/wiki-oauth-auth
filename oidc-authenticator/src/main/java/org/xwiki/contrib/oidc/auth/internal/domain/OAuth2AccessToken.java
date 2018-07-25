@@ -17,11 +17,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.oidc.event;
-
-import java.io.Serializable;
-import java.util.Date;
-import java.util.Set;
+package org.xwiki.contrib.oidc.auth.internal.domain;
 
 /**
  * @author wuguokai
@@ -32,6 +28,17 @@ public class OAuth2AccessToken {
     private String scope;
     private String tokenType;
     private Long expiresIn;
+
+    public OAuth2AccessToken() {
+    }
+
+    public OAuth2AccessToken(String accessToken, String refreshToken, String scope, String tokenType, Long expiresIn) {
+        this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
+        this.scope = scope;
+        this.tokenType = tokenType;
+        this.expiresIn = expiresIn;
+    }
 
     public String getAccessToken() {
         return accessToken;

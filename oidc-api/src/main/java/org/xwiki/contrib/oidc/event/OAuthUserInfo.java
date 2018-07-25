@@ -25,9 +25,12 @@ package org.xwiki.contrib.oidc.event;
 public class OAuthUserInfo {
     private Long id;
     private Long organizationId;
-    private String name;
-    private String email;
+    private String loginName;
+    private String realName;
     private String phone;
+    private String imageUrl;
+    private String profilePhoto;
+    private String email;
     private String timeZone;
     private String language;
 
@@ -47,12 +50,36 @@ public class OAuthUserInfo {
         this.organizationId = organizationId;
     }
 
-    public String getName() {
-        return name;
+    public String getLoginName() {
+        return loginName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setLoginName(String loginName) {
+        this.loginName = loginName;
+    }
+
+    public String getRealName() {
+        return realName;
+    }
+
+    public void setRealName(String realName) {
+        this.realName = realName;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public String getProfilePhoto() {
+        return profilePhoto;
+    }
+
+    public void setProfilePhoto(String profilePhoto) {
+        this.profilePhoto = profilePhoto;
     }
 
     public String getEmail() {
@@ -92,7 +119,11 @@ public class OAuthUserInfo {
         return "OAuthUserInfo{" +
                 "id=" + id +
                 ", organizationId=" + organizationId +
-                ", name='" + name + '\'' +
+                ", loginName='" + loginName + '\'' +
+                ", realName='" + realName + '\'' +
+                ", phone='" + phone + '\'' +
+                ", imageUrl='" + imageUrl + '\'' +
+                ", profilePhoto='" + profilePhoto + '\'' +
                 ", email='" + email + '\'' +
                 ", timeZone='" + timeZone + '\'' +
                 ", language='" + language + '\'' +

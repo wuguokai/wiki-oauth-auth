@@ -34,6 +34,8 @@ import com.xpn.xwiki.objects.BaseObject;
 import com.xpn.xwiki.objects.classes.BaseClass;
 import com.xpn.xwiki.user.api.XWikiRightService;
 import com.xpn.xwiki.web.XWikiRequest;
+import liquibase.util.file.FilenameUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.securityfilter.realm.SimplePrincipal;
@@ -42,6 +44,8 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.component.manager.ComponentManager;
 import org.xwiki.context.concurrent.ExecutionContextRunnable;
 import org.xwiki.contrib.oidc.OIDCUserInfo;
+import org.xwiki.contrib.oidc.auth.internal.domain.OAuth2AccessToken;
+import org.xwiki.contrib.oidc.event.OAuthUserInfo;
 import org.xwiki.contrib.oidc.auth.internal.endpoint.CallbackOIDCEndpoint;
 import org.xwiki.contrib.oidc.auth.internal.store.OIDCUserStore;
 import org.xwiki.contrib.oidc.event.*;
@@ -55,10 +59,8 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
+import java.io.InputStream;
+import java.net.*;
 import java.security.Principal;
 import java.util.*;
 import java.util.concurrent.Executor;
@@ -173,7 +175,10 @@ public class OIDCUserManager {
         Map<String, Object> prin = principal.getPrincipal();
         OAuthUserInfo userInfo = new OAuthUserInfo();
         userInfo.setId(new Long((Integer) prin.get("userId")));
-        userInfo.setName((String) prin.get("username"));
+        userInfo.setLoginName((String) prin.get("username"));
+        userInfo.setRealName((String) prin.get("realName"));
+        userInfo.setImageUrl((String) prin.get("imageUrl"));
+        userInfo.setProfilePhoto((String) prin.get("profilePhoto"));
         userInfo.setEmail((String) prin.get("email"));
         userInfo.setOrganizationId(new Long((Integer) prin.get("organizationId")));
         userInfo.setLanguage((String) prin.get("language"));
@@ -184,7 +189,7 @@ public class OIDCUserManager {
 
     public Principal updateUser(OAuthUserInfo userInfo) throws XWikiException, QueryException {
         XWikiDocument userDocument =
-                this.store.searchDocument(userInfo.getName());
+                this.store.searchDocument(userInfo.getLoginName());
 
         XWikiDocument modifiableDocument;
         boolean newUser;
@@ -211,14 +216,14 @@ public class OIDCUserManager {
             userObject.set("email", userInfo.getEmail(), xcontext);
         }
 
-        // Last name
-        if (userInfo.getName() != null) {
-            userObject.set("last_name", userInfo.getName(), xcontext);
+        // First name
+        if (userInfo.getLoginName() != null) {
+            userObject.set("first_name", userInfo.getLoginName(), xcontext);
         }
 
-        // First name
-        if (userInfo.getName() != null) {
-            userObject.set("first_name", userInfo.getName(), xcontext);
+        // Last name
+        if (userInfo.getRealName() != null) {
+            userObject.set("last_name", userInfo.getRealName(), xcontext);
         }
 
         // Phone
@@ -227,14 +232,14 @@ public class OIDCUserManager {
         }
 
         // Default locale
-//        if (userInfo.getLanguage() != null) {
-//            userObject.set("default_language", Locale.forLanguageTag(userInfo.getLanguage()).toString(), xcontext);
-//        }
+        if (userInfo.getLanguage() != null) {
+            userObject.set("default_language", Locale.forLanguageTag(userInfo.getLanguage()).toString(), xcontext);
+        }
 
         // Time Zone
-//        if (userInfo.getTimeZone() != null) {
-//            userObject.set("timezone", userInfo.getTimeZone(), xcontext);
-//        }
+        if (userInfo.getTimeZone() != null) {
+            userObject.set("timezone", userInfo.getTimeZone(), xcontext);
+        }
 
         // Website
 //        if (userInfo.getWebsite() != null) {
@@ -242,21 +247,21 @@ public class OIDCUserManager {
 //        }
 
         // Avatar
-//        if (userInfo.getPicture() != null) {
-//            try {
-//                String filename = FilenameUtils.getName(userInfo.getPicture().toString());
-//                URLConnection connection = userInfo.getPicture().toURL().openConnection();
-//                connection.setRequestProperty("User-Agent", this.getClass().getPackage().getImplementationTitle() + '/'
-//                        + this.getClass().getPackage().getImplementationVersion());
-//                try (InputStream content = connection.getInputStream()) {
-//                    modifiableDocument.addAttachment(filename, content, xcontext);
-//                }
-//                userObject.set("avatar", filename, xcontext);
-//            } catch (IOException e) {
-//                this.logger.warn("Failed to get user avatar from URL [{}]: {}", userInfo.getPicture(),
-//                        ExceptionUtils.getRootCauseMessage(e));
-//            }
-//        }
+        if (userInfo.getImageUrl() != null && !"".equals(userInfo.getImageUrl())) {
+            try {
+                String filename = FilenameUtils.getName("Avatar-"+ userInfo.getLoginName());
+                URLConnection connection = new URL(userInfo.getImageUrl()).openConnection();
+                connection.setRequestProperty("User-Agent", this.getClass().getPackage().getImplementationTitle() + '/'
+                        + this.getClass().getPackage().getImplementationVersion());
+                try (InputStream content = connection.getInputStream()) {
+                    modifiableDocument.addAttachment(filename, content, xcontext);
+                }
+                userObject.set("avatar", filename, xcontext);
+            } catch (IOException e) {
+                this.logger.warn("Failed to get user avatar from URL [{}]: {}", userInfo.getImageUrl(),
+                        ExceptionUtils.getRootCauseMessage(e));
+            }
+        }
 
         //TODO 暂时不要了
         // XWiki claims
@@ -278,9 +283,9 @@ public class OIDCUserManager {
         if (newUser || userDocument.apply(modifiableDocument)) {
             String comment;
             if (newUser) {
-                comment = "Create user from OpenID Connect";
+                comment = "Create user from OAuth Connect";
             } else {
-                comment = "Update user from OpenID Connect";
+                comment = "Update user from OAuth Connect";
             }
 
             xcontext.getWiki().saveDocument(userDocument, comment, xcontext);
@@ -342,7 +347,7 @@ public class OIDCUserManager {
         SpaceReference spaceReference = new SpaceReference(xcontext.getMainXWiki(), "XWiki");
 
         // Generate default document name
-        String documentName = userInfo.getName();
+        String documentName = userInfo.getLoginName();
 
         // Find not already existing document
         DocumentReference reference = new DocumentReference(documentName, spaceReference);

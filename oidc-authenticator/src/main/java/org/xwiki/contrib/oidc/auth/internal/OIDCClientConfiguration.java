@@ -35,7 +35,7 @@ import org.xwiki.container.Session;
 import org.xwiki.container.servlet.ServletSession;
 import org.xwiki.contrib.oidc.OIDCIdToken;
 import org.xwiki.contrib.oidc.OIDCUserInfo;
-import org.xwiki.contrib.oidc.event.OAuth2AccessToken;
+import org.xwiki.contrib.oidc.auth.internal.domain.OAuth2AccessToken;
 import org.xwiki.contrib.oidc.provider.internal.OIDCManager;
 import org.xwiki.contrib.oidc.provider.internal.endpoint.AuthorizationOIDCEndpoint;
 import org.xwiki.contrib.oidc.provider.internal.endpoint.TokenOIDCEndpoint;
