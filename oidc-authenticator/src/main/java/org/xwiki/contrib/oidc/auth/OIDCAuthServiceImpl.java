@@ -27,6 +27,8 @@ import java.net.URISyntaxException;
 import java.net.URL;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.oauth2.sdk.ResponseType;
+import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xwiki.contrib.oidc.auth.internal.OIDCClientConfiguration;
@@ -207,19 +209,23 @@ public class OIDCAuthServiceImpl extends XWikiAuthServiceImpl
         maybeStoreRequestParameterURLInSession(request, OIDCClientConfiguration.PROP_ENDPOINT_USERINFO);
 
         // Create the request URL
-        //TODO 改用简单认证模式 token， 使用ok http
-//        ResponseType responseType = ResponseType.getDefault();
+        ResponseType responseType = ResponseType.getDefault();
 //        AuthenticationRequest.Builder requestBuilder = new AuthenticationRequest.Builder(responseType,
-//            this.configuration.getCustomScope(), this.configuration.getClientID(), callback);
+//            null, this.configuration.getClientID(), callback);
 //        requestBuilder.endpointURI(this.configuration.getAuthorizationOIDCEndpoint());
 //
 //        // Claims
-////        requestBuilder.claims(this.configuration.getClaimsRequest());
+//        requestBuilder.claims(this.configuration.getClaimsRequest());
 //
 //        // State
 //        requestBuilder.state(state);
+//        String authUrl = this.configuration.getAuthorizationOIDCEndpoint().toString() +
+//                "?response_type=token" +
+//                "&client_id=" + this.configuration.getClientID().getValue() +
+//                "&state=" + state.getValue();
         String authUrl = this.configuration.getAuthorizationOIDCEndpoint().toString() +
-                "?response_type=token" +
+                "?response_type=" +
+                responseType.toString() +
                 "&client_id=" + this.configuration.getClientID().getValue() +
                 "&state=" + state.getValue();
 

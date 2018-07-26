@@ -20,9 +20,13 @@
 package org.xwiki.contrib.oidc.auth.internal.endpoint;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.google.common.base.Objects;
 import com.nimbusds.oauth2.sdk.*;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
+import com.nimbusds.oauth2.sdk.http.HTTPResponse;
+import com.nimbusds.oauth2.sdk.id.State;
+import com.nimbusds.openid.connect.sdk.OIDCError;
 import org.securityfilter.filter.SecurityRequestWrapper;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.container.Container;
@@ -30,6 +34,7 @@ import org.xwiki.container.servlet.ServletSession;
 import org.xwiki.contrib.oidc.auth.internal.OIDCClientConfiguration;
 import org.xwiki.contrib.oidc.auth.internal.OIDCUserManager;
 import org.xwiki.contrib.oidc.auth.internal.domain.OAuth2AccessToken;
+import org.xwiki.contrib.oidc.provider.internal.OIDCException;
 import org.xwiki.contrib.oidc.provider.internal.OIDCManager;
 import org.xwiki.contrib.oidc.provider.internal.OIDCResourceReference;
 import org.xwiki.contrib.oidc.provider.internal.endpoint.OIDCEndpoint;
@@ -41,6 +46,7 @@ import javax.inject.Singleton;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.security.Principal;
 import java.util.Base64;
 import java.util.Map;
@@ -77,13 +83,11 @@ public class CallbackOIDCEndpoint implements OIDCEndpoint {
     @Override
     public Response handle(HTTPRequest httpRequest, OIDCResourceReference reference) throws Exception {
         // Parse the request
-//        AuthorizationResponse authorizationResponse = AuthorizationResponse.parse(httpRequest);
-        Map<String, String> responseParameters = httpRequest.getQueryParameters();
+        AuthorizationResponse authorizationResponse = AuthorizationResponse.parse(httpRequest);
 
         // Validate state
-//        State state = authorizationResponse.getState();
-        String state = responseParameters.getOrDefault("state", "");
-        if (!Objects.equal(state, this.configuration.getSessionState().getValue())) {
+        State state = authorizationResponse.getState();
+        if (!Objects.equal(state.getValue(), this.configuration.getSessionState().getValue())) {
 //            return new RedirectResponse(new URI(authorizationResponse.getState().getValue()));
             return new RedirectResponse(this.configuration.getSuccessRedirectURI());
         }
@@ -93,70 +97,71 @@ public class CallbackOIDCEndpoint implements OIDCEndpoint {
         session.removeAttribute(OIDCClientConfiguration.PROP_STATE);
 
         // Deal with errors
-//        if (!authorizationResponse.indicatesSuccess()) {
-//            // Cast to error response
-//            AuthorizationErrorResponse errorResponse = (AuthorizationErrorResponse) authorizationResponse;
-//
-//            // If impossible to authenticate without prompt, just ignore and redirect
-//            if (OIDCError.INTERACTION_REQUIRED.getCode().equals(errorResponse.getErrorObject().getCode())
-//                    || OIDCError.LOGIN_REQUIRED.getCode().equals(errorResponse.getErrorObject().getCode())) {
-//                // Redirect to original request
+        if (!authorizationResponse.indicatesSuccess()) {
+            // Cast to error response
+            AuthorizationErrorResponse errorResponse = (AuthorizationErrorResponse) authorizationResponse;
+
+            // If impossible to authenticate without prompt, just ignore and redirect
+            if (OIDCError.INTERACTION_REQUIRED.getCode().equals(errorResponse.getErrorObject().getCode())
+                    || OIDCError.LOGIN_REQUIRED.getCode().equals(errorResponse.getErrorObject().getCode())) {
+                // Redirect to original request
 //                return new RedirectResponse(new URI(authorizationResponse.getState().getValue()));
-//            }
-//        }
+                return new RedirectResponse(this.configuration.getSuccessRedirectURI());
+            }
+        }
 
-        String accessToken = responseParameters.getOrDefault("access_token", "");
-        String tokenType = responseParameters.getOrDefault("token_type", "");
-        Long expiresIn = Long.valueOf(responseParameters.getOrDefault("expires_in", "0"));
-        String scope = responseParameters.getOrDefault("scope", "");
+//        String accessToken = responseParameters.getOrDefault("access_token", "");
+//        String tokenType = responseParameters.getOrDefault("token_type", "");
+//        Long expiresIn = Long.valueOf(responseParameters.getOrDefault("expires_in", "0"));
+//        String scope = responseParameters.getOrDefault("scope", "");
 
-        OAuth2AccessToken oAuth2AccessToken = new OAuth2AccessToken(accessToken, "", scope, tokenType, expiresIn);
+//        OAuth2AccessToken oAuth2AccessToken = new OAuth2AccessToken(accessToken, "", scope, tokenType, expiresIn);
 
         // Cast to success response
-//        AuthorizationSuccessResponse successResponse = (AuthorizationSuccessResponse) authorizationResponse;
+        AuthorizationSuccessResponse successResponse = (AuthorizationSuccessResponse) authorizationResponse;
 
         // Get authorization code
-//        AuthorizationCode code = successResponse.getAuthorizationCode();
+        AuthorizationCode code = successResponse.getAuthorizationCode();
 
         // Generate callback URL
 //        URI callback = this.oidc.createEndPointURI(CallbackOIDCEndpoint.HINT);
 
         // Get access token
-//        AuthorizationGrant authorizationGrant = new AuthorizationCodeGrant(code, callback);
+        AuthorizationGrant authorizationGrant = new AuthorizationCodeGrant(code, null);
 //        // TODO: setup some client authentication, secret, all that
-//        TokenRequest tokeRequest = new TokenRequest(this.configuration.getTokenOIDCEndpoint(),
-//                this.configuration.getClientID(), authorizationGrant);
-//        HTTPRequest tokenHTTP = tokeRequest.toHTTPRequest();
+        TokenRequest tokeRequest = new TokenRequest(this.configuration.getTokenOIDCEndpoint(),
+                this.configuration.getClientID(), authorizationGrant);
+        HTTPRequest tokenHTTP = tokeRequest.toHTTPRequest();
 //
-//        tokenHTTP.setHeader("User-Agent", this.getClass().getPackage().getImplementationTitle() + '/'
-//                + this.getClass().getPackage().getImplementationVersion());
-//        tokenHTTP.setHeader("Authorization", getBasicAuth());
-//        System.out.println("header: " + tokenHTTP.getHeaders());
+        tokenHTTP.setHeader("User-Agent", this.getClass().getPackage().getImplementationTitle() + '/'
+                + this.getClass().getPackage().getImplementationVersion());
+        tokenHTTP.setHeader("Authorization", getBasicAuth());
+        System.out.println("header: " + tokenHTTP.getHeaders());
 //
-//        HTTPResponse httpResponse = tokenHTTP.send();
+        HTTPResponse httpResponse = tokenHTTP.send();
 //
-//        if (httpResponse.getStatusCode() != HTTPResponse.SC_OK) {
-//            TokenErrorResponse error = TokenErrorResponse.parse(httpResponse);
-//            throw new OIDCException("Failed to get access token", error.getErrorObject());
-//        }
-//
-//        String content = httpResponse.getContent();
-//        OAuth2AccessToken accessToken = null;
-//        mapper.setPropertyNamingStrategy(PropertyNamingStrategy.CAMEL_CASE_TO_LOWER_CASE_WITH_UNDERSCORES);
-//        if (content != null && isJSONValid(content)) {
-//            accessToken = mapper.readValue(content, OAuth2AccessToken.class);
-//        }
-//
-//        if (accessToken == null) {
-//            throw new OIDCException("Failed to format access token");
-//        }
+        if (httpResponse.getStatusCode() != HTTPResponse.SC_OK) {
+            TokenErrorResponse error = TokenErrorResponse.parse(httpResponse);
+            throw new OIDCException("Failed to get access token", error.getErrorObject());
+        }
+
+        String content = httpResponse.getContent();
+        OAuth2AccessToken accessToken = null;
+        mapper.setPropertyNamingStrategy(PropertyNamingStrategy.CAMEL_CASE_TO_LOWER_CASE_WITH_UNDERSCORES);
+        if (content != null && isJSONValid(content)) {
+            accessToken = mapper.readValue(content, OAuth2AccessToken.class);
+        }
+
+        if (accessToken == null) {
+            throw new OIDCException("Failed to format access token");
+        }
 
 
         // Store the access token in the session
-        this.configuration.setOAuth2AccessToken(oAuth2AccessToken);
+        this.configuration.setOAuth2AccessToken(accessToken);
 
         // Update/Create XWiki user
-        Principal principal = this.users.updateUserInfo(oAuth2AccessToken);
+        Principal principal = this.users.updateUserInfo(accessToken);
 
         // Remember user in the session
         session.setAttribute(SecurityRequestWrapper.PRINCIPAL_SESSION_KEY, principal);

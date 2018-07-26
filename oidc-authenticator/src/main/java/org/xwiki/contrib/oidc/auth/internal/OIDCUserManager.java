@@ -157,37 +157,24 @@ public class OIDCUserManager {
         }
 
         String content = httpResponse.getContent();
-        CustomPrincipal principal = null;
-        mapper.setPropertyNamingStrategy(PropertyNamingStrategy.CAMEL_CASE_TO_LOWER_CASE_WITH_UNDERSCORES);
+        OAuthUserInfo userInfo = null;
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         if (content != null && CallbackOIDCEndpoint.isJSONValid(content)) {
-            principal = mapper.readValue(content, CustomPrincipal.class);
+            userInfo = mapper.readValue(content, OAuthUserInfo.class);
         }
 
-        OAuthUserInfo userInfo = getUserInfo(principal);
+        if (userInfo == null) {
+            throw new OIDCException("Failed to get userInfo");
+        }
 
         // Update/Create XWiki user
         return updateUser(userInfo);
     }
 
-    public static OAuthUserInfo getUserInfo(CustomPrincipal principal) {
-        //Done getUserInfo
-        Map<String, Object> prin = principal.getPrincipal();
-        OAuthUserInfo userInfo = new OAuthUserInfo();
-        userInfo.setId(new Long((Integer) prin.get("userId")));
-        userInfo.setLoginName((String) prin.get("username"));
-        userInfo.setRealName((String) prin.get("realName"));
-        userInfo.setImageUrl((String) prin.get("imageUrl"));
-        userInfo.setProfilePhoto((String) prin.get("profilePhoto"));
-        userInfo.setEmail((String) prin.get("email"));
-        userInfo.setOrganizationId(new Long((Integer) prin.get("organizationId")));
-        userInfo.setLanguage((String) prin.get("language"));
-        userInfo.setPhone((String) prin.get("phone"));
-        userInfo.setTimeZone((String) prin.get("timeZone"));
-        return userInfo;
-    }
-
-    public Principal updateUser(OAuthUserInfo userInfo) throws XWikiException, QueryException {
+    public Principal updateUser(OAuthUserInfo userInfo) throws XWikiException, QueryException, OIDCException {
+        if (userInfo.getLoginName() == null) {
+            throw new OIDCException("Failed to get user LoginName");
+        }
         XWikiDocument userDocument =
                 this.store.searchDocument(userInfo.getLoginName());
 

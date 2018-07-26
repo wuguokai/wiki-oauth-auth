@@ -24,15 +24,32 @@ package org.xwiki.contrib.oidc.event;
  */
 public class OAuthUserInfo {
     private Long id;
+
     private Long organizationId;
+
     private String loginName;
-    private String realName;
-    private String phone;
-    private String imageUrl;
-    private String profilePhoto;
+
     private String email;
-    private String timeZone;
+
+    private String realName;
+
+    private String phone;
+
+    private String imageUrl;
+
     private String language;
+
+    private String timeZone;
+
+    private Boolean locked;
+
+    private Boolean ldap;
+
+    private Boolean enabled;
+
+    private String password;
+
+    private Boolean admin;
 
     public Long getId() {
         return id;
@@ -58,36 +75,20 @@ public class OAuthUserInfo {
         this.loginName = loginName;
     }
 
-    public String getRealName() {
-        return realName;
-    }
-
-    public void setRealName(String realName) {
-        this.realName = realName;
-    }
-
-    public String getImageUrl() {
-        return imageUrl;
-    }
-
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
-    }
-
-    public String getProfilePhoto() {
-        return profilePhoto;
-    }
-
-    public void setProfilePhoto(String profilePhoto) {
-        this.profilePhoto = profilePhoto;
-    }
-
     public String getEmail() {
         return email;
     }
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getRealName() {
+        return realName;
+    }
+
+    public void setRealName(String realName) {
+        this.realName = realName;
     }
 
     public String getPhone() {
@@ -98,12 +99,12 @@ public class OAuthUserInfo {
         this.phone = phone;
     }
 
-    public String getTimeZone() {
-        return timeZone;
+    public String getImageUrl() {
+        return imageUrl;
     }
 
-    public void setTimeZone(String timeZone) {
-        this.timeZone = timeZone;
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
     public String getLanguage() {
@@ -114,19 +115,71 @@ public class OAuthUserInfo {
         this.language = language;
     }
 
+    public String getTimeZone() {
+        return timeZone;
+    }
+
+    public void setTimeZone(String timeZone) {
+        this.timeZone = timeZone;
+    }
+
+    public Boolean getLocked() {
+        return locked;
+    }
+
+    public void setLocked(Boolean locked) {
+        this.locked = locked;
+    }
+
+    public Boolean getLdap() {
+        return ldap;
+    }
+
+    public void setLdap(Boolean ldap) {
+        this.ldap = ldap;
+    }
+
+    public Boolean getEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(Boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public Boolean getAdmin() {
+        return admin;
+    }
+
+    public void setAdmin(Boolean admin) {
+        this.admin = admin;
+    }
+
     @Override
     public String toString() {
         return "OAuthUserInfo{" +
                 "id=" + id +
                 ", organizationId=" + organizationId +
                 ", loginName='" + loginName + '\'' +
+                ", email='" + email + '\'' +
                 ", realName='" + realName + '\'' +
                 ", phone='" + phone + '\'' +
                 ", imageUrl='" + imageUrl + '\'' +
-                ", profilePhoto='" + profilePhoto + '\'' +
-                ", email='" + email + '\'' +
-                ", timeZone='" + timeZone + '\'' +
                 ", language='" + language + '\'' +
+                ", timeZone='" + timeZone + '\'' +
+                ", locked=" + locked +
+                ", ldap=" + ldap +
+                ", enabled=" + enabled +
+                ", password='" + password + '\'' +
+                ", admin=" + admin +
                 '}';
     }
 }
