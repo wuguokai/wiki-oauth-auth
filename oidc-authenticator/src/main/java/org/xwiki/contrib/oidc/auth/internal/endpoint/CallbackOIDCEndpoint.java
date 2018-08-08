@@ -89,11 +89,12 @@ public class CallbackOIDCEndpoint implements OIDCEndpoint {
         State state = authorizationResponse.getState();
         if (!Objects.equal(state.getValue(), this.configuration.getSessionState().getValue())) {
 //            return new RedirectResponse(new URI(authorizationResponse.getState().getValue()));
+            //todo state不正确的处理
             return new RedirectResponse(this.configuration.getSuccessRedirectURI());
         }
         HttpSession session = ((ServletSession) this.container.getSession()).getHttpSession();
 
-        // TODO: remove the state from the session ? !
+        // done: remove the state from the session ? !
         session.removeAttribute(OIDCClientConfiguration.PROP_STATE);
 
         // Deal with errors

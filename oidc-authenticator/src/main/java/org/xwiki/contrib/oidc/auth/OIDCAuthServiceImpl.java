@@ -102,10 +102,11 @@ public class OIDCAuthServiceImpl extends XWikiAuthServiceImpl
             } catch (Exception e) {
                 throw new XWikiException("Failed OIDC authentication", e);
             }
-        } else {
-            // See if we need to refresh the user information
-            this.users.checkUpdateUserInfo();
         }
+//        else {
+//            // See if we need to refresh the user information
+//            this.users.checkUpdateUserInfo();
+//        }
 
         return user;
     }
@@ -124,10 +125,10 @@ public class OIDCAuthServiceImpl extends XWikiAuthServiceImpl
         if (!choerodonToken.equals(wikiToken)) {
             return null;
         }
-        OAuthUserInfo userInfo = new OAuthUserInfo();
-        userInfo.setLoginName(userName);
+//        OAuthUserInfo userInfo = new OAuthUserInfo();
+//        userInfo.setLoginName(userName);
         //Create or Update user
-        users.updateUser(userInfo);
+//        users.updateUser(userInfo);
         return new XWikiUser("XWiki." + userName);
     }
 
@@ -189,7 +190,7 @@ public class OIDCAuthServiceImpl extends XWikiAuthServiceImpl
     private void authenticate(XWikiContext context) throws XWikiException, URISyntaxException, IOException
     {
         // Generate callback URL
-        URI callback = this.oidc.createEndPointURI(CallbackOIDCEndpoint.HINT);
+//        URI callback = this.oidc.createEndPointURI(CallbackOIDCEndpoint.HINT);
 
         // Remember various stuff in the session so that callback can access it
         XWikiRequest request = context.getRequest();
@@ -224,8 +225,7 @@ public class OIDCAuthServiceImpl extends XWikiAuthServiceImpl
 //                "&client_id=" + this.configuration.getClientID().getValue() +
 //                "&state=" + state.getValue();
         String authUrl = this.configuration.getAuthorizationOIDCEndpoint().toString() +
-                "?response_type=" +
-                responseType.toString() +
+                "?response_type=" + responseType.toString() +
                 "&client_id=" + this.configuration.getClientID().getValue() +
                 "&state=" + state.getValue();
 

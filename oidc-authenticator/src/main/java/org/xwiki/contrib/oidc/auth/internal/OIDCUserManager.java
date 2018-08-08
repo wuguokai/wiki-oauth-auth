@@ -251,7 +251,7 @@ public class OIDCUserManager {
         }
 
         //TODO 暂时不要了
-        // XWiki claims
+//         XWiki claims
 //        updateXWikiClaims(modifiableDocument, userObject.getXClass(xcontext), userObject, userInfo, xcontext);
 
         //TODO 暂时不需要
