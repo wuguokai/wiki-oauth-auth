@@ -399,7 +399,7 @@ public class OIDCUserManager {
         return substitutor.replace(this.configuration.getUserNameFormater());
     }
 
-    public void logout() {
+    public void logout() throws URISyntaxException, IOException {
         XWikiRequest request = this.xcontextProvider.get().getRequest();
 
         // TODO: remove cookies
@@ -408,6 +408,7 @@ public class OIDCUserManager {
         // just after a logout)
         request.getSession().removeAttribute(OIDCClientConfiguration.PROP_SESSION_ACCESSTOKEN);
         request.getSession().removeAttribute(OIDCClientConfiguration.PROP_SESSION_IDTOKEN);
+        request.getSession().removeAttribute(OIDCClientConfiguration.PROP_SESSION_OAUTH2ACCESSTOKEN);
         request.getSession().removeAttribute(OIDCClientConfiguration.PROP_SESSION_USERINFO_EXPORATIONDATE);
         request.getSession().removeAttribute(OIDCClientConfiguration.PROP_ENDPOINT_AUTHORIZATION);
         request.getSession().removeAttribute(OIDCClientConfiguration.PROP_ENDPOINT_TOKEN);
@@ -418,5 +419,16 @@ public class OIDCUserManager {
         request.getSession().removeAttribute(OIDCClientConfiguration.PROP_STATE);
         request.getSession().removeAttribute(OIDCClientConfiguration.PROP_USER_NAMEFORMATER);
         request.getSession().removeAttribute(OIDCClientConfiguration.PROP_USERINFOCLAIMS);
+
+        //同时退出oauth server的登录
+        //todo 要重定向到浏览器请求
+//        String logoutUrl = this.configuration.getLogoutOIDCEndpoint();
+//        if (logoutUrl != null && !"".equals(logoutUrl)) {
+//            HTTPRequest userinfoHTTP = new HTTPRequest(HTTPRequest.Method.GET, new URL(logoutUrl));
+//            userinfoHTTP.setHeader("User-Agent", this.getClass().getPackage().getImplementationTitle() + '/'
+//                    + this.getClass().getPackage().getImplementationVersion());
+////        userinfoHTTP.setHeader("Authorization", accessToken.getTokenType() + " " + accessToken.getAccessToken());
+//            userinfoHTTP.send();
+//        }
     }
 }

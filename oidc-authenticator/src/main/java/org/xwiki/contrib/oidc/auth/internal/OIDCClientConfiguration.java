@@ -76,6 +76,8 @@ public class OIDCClientConfiguration {
 
     public static final String PROP_ENDPOINT_USERINFO = PROPPREFIX_ENDPOINT + UserInfoOIDCEndpoint.HINT;
 
+    public static final String OAUTH_LOGOUT_URL = "oidc.endpoint.logout";
+
     public static final String PROP_CLIENTID = "oidc.clientid";
 
     public static final String PROP_CLIENTSECRET = "oidc.clientsecret";
@@ -242,6 +244,14 @@ public class OIDCClientConfiguration {
 
     public URI getUserInfoOIDCEndpoint() throws URISyntaxException, MalformedURLException {
         return getEndPoint(UserInfoOIDCEndpoint.HINT);
+    }
+
+    public String getLogoutOIDCEndpoint() throws URISyntaxException {
+        return getProperty(OAUTH_LOGOUT_URL, String.class);
+    }
+
+    public void setLogoutOIDCEndpoint(String oauthLogoutUrl) {
+        setSessionAttribute(OAUTH_LOGOUT_URL, oauthLogoutUrl);
     }
 
     public ClientID getClientID() {

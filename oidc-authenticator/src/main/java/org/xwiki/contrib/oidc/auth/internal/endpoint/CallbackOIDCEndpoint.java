@@ -88,7 +88,7 @@ public class CallbackOIDCEndpoint implements OIDCEndpoint {
         // Validate state
         State state = authorizationResponse.getState();
         if (!Objects.equal(state.getValue(), this.configuration.getSessionState().getValue())) {
-//            return new RedirectResponse(new URI(authorizationResponse.getState().getValue()));
+//            return new RedirectResponse(new URI(state.getValue()));
             //todo state不正确的处理
             return new RedirectResponse(this.configuration.getSuccessRedirectURI());
         }
@@ -157,9 +157,13 @@ public class CallbackOIDCEndpoint implements OIDCEndpoint {
             throw new OIDCException("Failed to format access token");
         }
 
-
         // Store the access token in the session
         this.configuration.setOAuth2AccessToken(accessToken);
+
+        String logoutUrl = this.configuration.getLogoutOIDCEndpoint();
+        if (logoutUrl != null && !"".equals(logoutUrl)) {
+            this.configuration.setLogoutOIDCEndpoint(logoutUrl);
+        }
 
         // Update/Create XWiki user
         Principal principal = this.users.updateUserInfo(accessToken);
