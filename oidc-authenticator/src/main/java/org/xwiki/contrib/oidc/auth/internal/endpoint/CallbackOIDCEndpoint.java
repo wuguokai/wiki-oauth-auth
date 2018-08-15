@@ -28,9 +28,12 @@ import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.openid.connect.sdk.OIDCError;
 import org.securityfilter.filter.SecurityRequestWrapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.container.Container;
 import org.xwiki.container.servlet.ServletSession;
+import org.xwiki.contrib.oidc.auth.OIDCAuthServiceImpl;
 import org.xwiki.contrib.oidc.auth.internal.OIDCClientConfiguration;
 import org.xwiki.contrib.oidc.auth.internal.OIDCUserManager;
 import org.xwiki.contrib.oidc.auth.internal.domain.OAuth2AccessToken;
@@ -49,6 +52,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.security.Principal;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -61,6 +65,7 @@ import java.util.Map;
 @Singleton
 public class CallbackOIDCEndpoint implements OIDCEndpoint {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(CallbackOIDCEndpoint.class);
     private static final ObjectMapper mapper = new ObjectMapper();
 
     /**
@@ -129,15 +134,21 @@ public class CallbackOIDCEndpoint implements OIDCEndpoint {
 
         // Get access token
         AuthorizationGrant authorizationGrant = new AuthorizationCodeGrant(code, null);
+
+        Map<String, String> customParams = new HashMap<>();
+        String clientSecret = this.configuration.getClientSecret();
+        customParams.put("client_secret", clientSecret);
 //        // TODO: setup some client authentication, secret, all that
         TokenRequest tokeRequest = new TokenRequest(this.configuration.getTokenOIDCEndpoint(),
-                this.configuration.getClientID(), authorizationGrant);
+                this.configuration.getClientID(), authorizationGrant, null, customParams);
         HTTPRequest tokenHTTP = tokeRequest.toHTTPRequest();
 //
         tokenHTTP.setHeader("User-Agent", this.getClass().getPackage().getImplementationTitle() + '/'
                 + this.getClass().getPackage().getImplementationVersion());
-        tokenHTTP.setHeader("Authorization", getBasicAuth());
-        System.out.println("header: " + tokenHTTP.getHeaders());
+//        tokenHTTP.setHeader("Authorization", getBasicAuth());
+
+//        System.out.println("header: " + tokenHTTP.getHeaders());
+        LOGGER.info("get token url is {}", tokenHTTP.getURL());
 //
         HTTPResponse httpResponse = tokenHTTP.send();
 //
